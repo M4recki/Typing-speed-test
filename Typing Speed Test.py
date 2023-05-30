@@ -3,15 +3,15 @@ from faker import Faker
 from threading import Thread
 from time import sleep
 
+# TODO: Add final score window
+
 # Fonts
 font_1 = ("Barlow", 27)
 font_2 = ("Mukta", 35, "bold")
 font_3 = ("Barlow", 15)
 
+# Main color
 gray = "#242424"
-
-# TODO: Add code explanations
-
 
 class App(ctk.CTk):
     def __init__(self):
@@ -31,53 +31,49 @@ class App(ctk.CTk):
         self.random_sentence = generate_random_sentence()
         self.running = False
 
-        # Counting functions of time, characters, effectiveness and mistakes
+        # Starting a multi-threaded task
         def start_timer(event=None):
             if not self.running:
                 self.running = True
-                t1 = Thread(target=count_down)
-                t1.start()
+                parallel_task = Thread(target=count_down_and_analyze_data)
+                parallel_task.start()
 
-                t2 = Thread(target=start_analyzing_data)
-                t2.start()
-                
-        def count_down():
+        # Counting down time and collecting data on the user's typing
+        def count_down_and_analyze_data():
+            # Counting down time
             for i in range(60):
                 self.seconds -= 1
                 self.time_counter_label.configure(text=self.seconds)
                 sleep(1)
                 i += 1
+                
+                # Collecting data on the user's typing (words, characters, accuracy)
+                elapsed_time = 60 - self.seconds
+                typed_text = self.writing_area_entry.get()
+                
+                words_per_minute = int(
+                    len(typed_text.split()) / (elapsed_time / 60))
+                
+                chars_per_minute = int(len(typed_text) / (elapsed_time / 60))
+                
+                typed_chars = list(typed_text.strip())
+                
+                original_chars = list(self.random_sentence.strip())
+                
+                errors = 0
+                
+                # Counting effectiveness
+                for typed_char, original_char in zip(typed_chars, original_chars):
+                    if typed_char.strip() != original_char.strip():
+                        errors += 1
+                        
+                accuracy = round(((len(original_chars) - errors) / len(original_chars)) * 100)
+                
+                # Display data
+                self.words_per_minute_button.configure(text=str(words_per_minute))
+                self.chars_per_minute_button.configure(text=str(chars_per_minute))
+                self.percent_accuracy_button.configure(text=str(accuracy))
 
-        def count_words_per_minute(time_elapsed, typed_text):
-            words = typed_text.split()
-            words_per_minute = len(words) / (time_elapsed / 60)
-            return words_per_minute
-
-        def count_chars_per_minute(time_elapsed, typed_text):
-            chars_per_minute = len(typed_text) / (time_elapsed / 60)
-            return chars_per_minute
-
-        def calculate_accuracy(typed_text, original_text):
-            typed_chars = list(typed_text)
-            original_chars = list(original_text)
-            errors = 0
-            for i in range(len(typed_chars)):
-                if typed_chars[i].strip() != original_chars[i].strip():
-                    errors += 1
-            accuracy = ((len(typed_chars) - errors) / len(typed_chars)) * 100
-            return accuracy
-        
-        def start_analyzing_data(event=None):
-            elapsed_time = 60 - self.seconds
-            self.words = count_words_per_minute(
-                elapsed_time, self.writing_area_entry.get())
-            self.characters = count_chars_per_minute(
-                elapsed_time, self.writing_area_entry.get())
-            self.accuracy = calculate_accuracy(
-                self.writing_area_entry.get(), self.random_sentence)
-            self.words_per_minute_button.configure(text=f"{self.words:.2f}")
-            self.chars_per_minute_button.configure(text=f"{self.characters:.2f}")
-            self.percent_accuracy_button.configure(text=f"{self.accuracy:.2f}%")
 
         # Window settings
         self.geometry("700x700")
