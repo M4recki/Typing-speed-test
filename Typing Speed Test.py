@@ -13,6 +13,7 @@ font_3 = ("Barlow", 15)
 # Main color
 gray = "#242424"
 
+
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -23,13 +24,8 @@ class App(ctk.CTk):
             random_text = fake.text()
             return random_text
 
-        # Attributes
-        self.words = 0
-        self.characters = 0
-        self.accuracy = 0
-        self.seconds = 60
-        self.random_sentence = generate_random_sentence()
-        self.running = False
+        def on_backspace():
+            pass
 
         # Starting a multi-threaded task
         def start_timer(event=None):
@@ -37,6 +33,18 @@ class App(ctk.CTk):
                 self.running = True
                 parallel_task = Thread(target=count_down_and_analyze_data)
                 parallel_task.start()
+
+        # Show final results
+        def final_results():
+            self.results_window = ctk.CTkToplevel(self)
+            self.results_window.title("Final results")
+            self.results_window.geometry("500x500")
+            self.results_window.after(
+                201, lambda: self.results_window.iconbitmap("typing.ico"))
+
+            self.results_label = ctk.CTkLabel(
+                self.results_window, text="Your This test is finished.\nHere are the final results:", font=font_1, text_color="white", fg_color=gray)
+            self.results_label.grid(row=0, column=1, pady=25, padx=(0, 50))
 
         # Counting down time and collecting data on the user's typing
         def count_down_and_analyze_data():
@@ -46,34 +54,55 @@ class App(ctk.CTk):
                 self.time_counter_label.configure(text=self.seconds)
                 sleep(1)
                 i += 1
-                
+
                 # Collecting data on the user's typing (words, characters, accuracy)
                 elapsed_time = 60 - self.seconds
                 typed_text = self.writing_area_entry.get()
-                
+
                 words_per_minute = int(
                     len(typed_text.split()) / (elapsed_time / 60))
-                
+
                 chars_per_minute = int(len(typed_text) / (elapsed_time / 60))
-                
+
                 typed_chars = list(typed_text.strip())
-                
+
                 original_chars = list(self.random_sentence.strip())
-                
+
+                # Counting effectiveness
                 errors = 0
                 
-                # Counting effectiveness
                 for typed_char, original_char in zip(typed_chars, original_chars):
                     if typed_char.strip() != original_char.strip():
                         errors += 1
-                        
-                accuracy = round(((len(original_chars) - errors) / len(original_chars)) * 100)
-                
+
+                accuracy = round(
+                    ((len(original_chars) - errors) / len(original_chars)) * 100)
+
                 # Display data
-                self.words_per_minute_button.configure(text=str(words_per_minute))
-                self.chars_per_minute_button.configure(text=str(chars_per_minute))
+                self.words_per_minute_button.configure(
+                    text=str(words_per_minute))
+                self.chars_per_minute_button.configure(
+                    text=str(chars_per_minute))
                 self.percent_accuracy_button.configure(text=str(accuracy))
 
+                if typed_text == self.random_sentence:
+                    self.running = False
+                    final_results()
+                    break
+
+                if self.seconds == 0:
+                    self.running = False
+                    final_results()
+                    break
+
+        # Attributes
+        self.words = 0
+        self.characters = 0
+        self.accuracy = 0
+        self.seconds = 60
+        self.random_sentence = generate_random_sentence()
+        self.running = False
+        
 
         # Window settings
         self.geometry("700x700")
