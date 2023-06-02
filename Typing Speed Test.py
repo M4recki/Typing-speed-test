@@ -3,8 +3,6 @@ from faker import Faker
 from threading import Thread
 from time import sleep
 
-# TODO: Add final score window
-
 # Fonts
 font_1 = ("Barlow", 27)
 font_2 = ("Mukta", 35, "bold")
@@ -24,8 +22,17 @@ class App(ctk.CTk):
             random_text = fake.text()
             return random_text
 
-        def on_backspace():
-            pass
+        # Closing the program after clicking the close program button during the test summary
+        def close_program():
+            self.running = False
+            self.destroy()
+
+        # Restarting the test after clicking the restart test button during the test summary
+        def restart_test():
+            self.running = False
+            self.results_window.destroy()
+            app = App()
+            app.mainloop()
 
         # Starting a multi-threaded task
         def start_timer(event=None):
@@ -34,7 +41,7 @@ class App(ctk.CTk):
                 parallel_task = Thread(target=count_down_and_analyze_data)
                 parallel_task.start()
 
-        # Show final results
+        # Show final results window
         def final_results():
             self.results_window = ctk.CTkToplevel(self)
             self.results_window.title("Final results")
@@ -44,13 +51,62 @@ class App(ctk.CTk):
 
             self.results_label = ctk.CTkLabel(
                 self.results_window, text="Your This test is finished.\nHere are the final results:", font=font_1, text_color="white", fg_color=gray)
-            self.results_label.grid(row=0, column=1, pady=25, padx=(0, 50))
+            self.results_label.grid(row=0, column=1, pady=25, padx=100)
+
+            # Section showing user typing data
+            self.data_frame_toplevel = ctk.CTkFrame(
+                self.results_window, width=500, height=100, fg_color=gray)
+            self.data_frame_toplevel.grid(
+                row=1, column=1, padx=(40, 0), pady=100, sticky="nsew")
+
+            # Words per minute
+            self.words_per_minute_button_toplevel = ctk.CTkButton(
+                self.data_frame_toplevel, text=f"{self.words}", font=font_2, text_color="white", width=70, height=50, corner_radius=10, fg_color="black", hover_color="black", border_spacing=3)
+            self.words_per_minute_button_toplevel.grid(row=1, column=0)
+
+            self.words_per_minute_label_toplevel = ctk.CTkLabel(
+                self.data_frame_toplevel, text="Words/min", font=font_3, text_color="white", fg_color=gray)
+            self.words_per_minute_label_toplevel.grid(row=2, column=0, pady=5)
+
+            # Characters per minute
+            self.chars_per_minute_button_toplevel = ctk.CTkButton(
+                self.data_frame_toplevel, text=f"{self.characters}", font=font_2, text_color="white", width=70, height=50, corner_radius=10, fg_color="black", hover_color="black", border_spacing=3)
+            self.chars_per_minute_button_toplevel.grid(
+                row=1, column=1, padx=100)
+
+            self.chars_per_minute_label_toplevel = ctk.CTkLabel(
+                self.data_frame_toplevel, text="Chars/min", font=font_3, text_color="white", fg_color=gray)
+            self.chars_per_minute_label_toplevel.grid(
+                row=2, column=1, pady=5, padx=100)
+
+            # % Accuracy data
+            self.percent_accuracy_button_toplevel = ctk.CTkButton(
+                self.data_frame_toplevel, text=f"{self.accuracy}", font=font_2, text_color="white", width=70, height=50, corner_radius=10, fg_color="black", border_color="black", hover_color="black", border_spacing=3)
+            self.percent_accuracy_button_toplevel.grid(row=1, column=2)
+
+            self.percent_accuracy_label_toplevel = ctk.CTkLabel(
+                self.data_frame_toplevel, text="% accuracy", font=font_3, text_color="white", fg_color=gray)
+            self.percent_accuracy_label_toplevel.grid(row=2, column=2, pady=5)
+
+            # Section where user can restart the test or close the program
+            self.options = ctk.CTkFrame(
+                self.results_window, width=100, height=200, fg_color=gray)
+            self.options.grid(row=3, column=1, padx=(
+                40, 0), sticky="nsew")
+
+            self.close = ctk.CTkButton(self.options, text="Close", font=font_1, text_color="black", width=70,
+                                       height=50, corner_radius=10, fg_color="#FF6347", hover_color="#EF5337", border_spacing=3, command=close_program)
+            self.close.grid(row=3, column=0, padx=80)
+
+            self.restart_button = ctk.CTkButton(self.options, text="Restart", font=font_1, text_color="black",
+                                                width=70, height=50, corner_radius=10, fg_color="#FF6347", hover_color="#EF5337", border_spacing=3, command=restart_test)
+            self.restart_button.grid(row=3, column=1)
 
         # Counting down time and collecting data on the user's typing
         def count_down_and_analyze_data():
             # Counting down time
             for i in range(60):
-                self.seconds -= 1
+                self.seconds -= 60
                 self.time_counter_label.configure(text=self.seconds)
                 sleep(1)
                 i += 1
@@ -70,7 +126,7 @@ class App(ctk.CTk):
 
                 # Counting effectiveness
                 errors = 0
-                
+
                 for typed_char, original_char in zip(typed_chars, original_chars):
                     if typed_char.strip() != original_char.strip():
                         errors += 1
@@ -102,7 +158,6 @@ class App(ctk.CTk):
         self.seconds = 60
         self.random_sentence = generate_random_sentence()
         self.running = False
-        
 
         # Window settings
         self.geometry("700x700")
