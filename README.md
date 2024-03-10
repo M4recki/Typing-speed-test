@@ -45,4 +45,4 @@ To use the Typing Speed Test project, simply run the Typing Speed Test.py file i
 
 
 ## Contact
-If you have any questions or comments about the Weather App, please contact us at MARBARA93@edu.lublin.eu
+If you have any questions or comments about the Typing speed test, please contact us at MARBARA93@edu.lublin.eu
